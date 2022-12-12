@@ -94,11 +94,11 @@ class Controller:
     labelFilePath = ''
     useCustomizedWeight = False
     weightFilePath = ''
-    regularizationStrength = 1.0
+    regularizationStrength = DEFAULT_REG_STRENGTH
 
     def setRegularizationStrength(self, input):
         if input == '':
-            self.regularizationStrength = 1.0
+            self.regularizationStrength = DEFAULT_REG_STRENGTH
         else:
             self.regularizationStrength = float(input)
 
