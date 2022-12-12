@@ -1,0 +1,4 @@
+OUTPUT_DICT_DATA_POINT_KEY = 'features'
+OUTPUT_DICT_LABELS_KEY = 'labels'
+OUTOUT_DICT_WEIGHT_KEY = 'weights'
+OUTPUT_DICT_REG_STRENGTH_KEY = 'regularization_strength'

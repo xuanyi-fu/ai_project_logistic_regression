@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from sklearn.decomposition import PCA
+from utils import *
 
 CUSTOMIZED_WEIGHT_REG_FUNC = None
 REG_FUNC = None
@@ -26,11 +27,6 @@ CANVAS_WIDTH = 500
 CANVAS_HEIGHT = 500
 FILE_PATH_INPUT_WIDTH = 40
 DEFAULT_REG_STRENGTH = 1.0
-
-OUTPUT_DICT_DATA_POINT_KEY = 'features'
-OUTPUT_DICT_LABELS_KEY = 'labels'
-OUTOUT_DICT_WEIGHT_KEY = 'weights'
-OUTPUT_DICT_REG_STRENGTH_KEY = 'regularization_strength'
 
 
 def isCSV(infile):
