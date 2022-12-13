@@ -17,3 +17,4 @@ MODEL_OUTPUT_DICT_METRICS_KEY = 'metrics'
 #   ...
 # }
 MODEL_OUTPUT_DICT_FITTED_WEIGHT_KEY = 'fitted_weights' # (1, n_features)
+MODEL_OUTPUT_DICT_FIGURE = 'figure'
