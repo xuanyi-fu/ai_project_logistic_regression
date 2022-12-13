@@ -4,10 +4,8 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from utils import * 
-from main import *
 import matplotlib.pyplot as plt
 from scipy.special import expit
-
 
 
 def plot_logistic_curve(x, y, model):
@@ -30,7 +28,10 @@ def plot_logistic_curve(x, y, model):
     plt.plot(figure_x_values, figure_y_values, label="Logistic Regression Model")
     plt.ylabel("Probability(sigmoid(x))")
     plt.xlabel("Measurement(x)")
-    plt.show()
+    plt.legend(
+    loc="lower right",
+    fontsize="small",)
+    # plt.show()
     return plt.gcf()
 
 
@@ -60,7 +61,22 @@ def auto_logistic_regression(inputs):
             MODEL_OUTPUT_DICT_FITTED_WEIGHT_KEY: model_coefficient,
             MODEL_OUTPUT_DICT_FIGURE: fig}
 
-# def main():
+# def readCSV2Ndarray(filePath):
+#     if not os.path.exists(filePath):
+#         raise Exception("File: " + filePath + " does not exist.")
+
+#     npArray = None
+#     try:
+#         npArray = np.genfromtxt(filePath, delimiter=",")
+#         if len(npArray.shape) == 1:
+#             npArray = np.expand_dims(npArray, axis=1)
+#     except Exception:
+#         raise Exception("File: " + filePath +
+#                         " is not a valid CSV File. (Numpy Parsing Failed)")
+
+#     return npArray
+    
+# def test():
 #     data = readCSV2Ndarray('mock/5x20/data_point.csv')
 #     label = readCSV2Ndarray('mock/5x20/label.csv')
 
@@ -74,4 +90,4 @@ def auto_logistic_regression(inputs):
 
 # if __name__ == '__main__':
 
-#     main()
+#     test()
