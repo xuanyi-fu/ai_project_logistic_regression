@@ -9,6 +9,7 @@ from scipy.special import expit
 
 
 def plot_logistic_curve(x, y, model):
+    plt.clf()
     figure_x_values = np.sum(np.multiply(x, model.coef_), axis=1) + model.intercept_
     figure_y_values = expit(figure_x_values).ravel()
     predict_result  = model.predict(x)
