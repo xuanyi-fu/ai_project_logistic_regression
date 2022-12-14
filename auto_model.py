@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, log_loss
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from utils import * 
@@ -49,7 +49,7 @@ def auto_logistic_regression(inputs):
     model = LogisticRegression(C=C)
     model.fit(x_train, y_train)
     model_coefficient = model.coef_
-    cost = mean_squared_error(y_train, model.predict(x_train))
+    cost = log_loss(y_train, model.predict_proba(x_train))
     test_results = model.predict(x_test)
     test_metrics = classification_report(y_test, test_results, output_dict=True)
 
