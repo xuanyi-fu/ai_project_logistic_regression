@@ -3,6 +3,7 @@ OUTPUT_DICT_LABELS_KEY = 'labels'
 OUTOUT_DICT_WEIGHT_KEY = 'weights'
 OUTPUT_DICT_REG_STRENGTH_KEY = 'regularization_strength'
 OUTPUT_DICT_TEST_SIZE_KEY = 'test_size'
+OUTPUT_DICT_B_KEY = 'intercept'
 
 
 MODEL_OUTPUT_DICT_RESULTS_KEY = 'results' # (n_samples, ) Vector containing the class labels for each sample.
@@ -18,3 +19,4 @@ MODEL_OUTPUT_DICT_METRICS_KEY = 'metrics'
 # }
 MODEL_OUTPUT_DICT_FITTED_WEIGHT_KEY = 'fitted_weights' # (1, n_features)
 MODEL_OUTPUT_DICT_FIGURE = 'figure'
+MODEL_OUTPUT_DICT_PROB_KEY = 'pred_prob_manual'
