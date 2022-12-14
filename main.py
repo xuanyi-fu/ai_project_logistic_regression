@@ -5,7 +5,8 @@ from sklearn.decomposition import PCA
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import os
-
+import io
+import json
 import PySimpleGUI as sg
 import numpy as np
 import matplotlib
@@ -23,6 +24,8 @@ EVENT_CANVAS = '-Canvas-'
 EVENT_REG_STRENGTH = '-RegStrength-'
 EVENT_RUN = '-Run-'
 EVENT_TEST_SIZE_SLIDER = '-TestSize-'
+EVENT_COST = '-Cost-'
+EVENT_LISTBOX = '-ListBox-'
 
 WINDOW_WIDTH = 500
 WINDOW_HEIGHT = 1000
@@ -31,6 +34,9 @@ CANVAS_HEIGHT = 500
 FILE_PATH_INPUT_WIDTH = 40
 DEFAULT_REG_STRENGTH = 1.0
 DEFAULT_TEST_SIZE = 0.2
+
+METRIC_FILENAME = 'metrics.json'
+FITTED_WEIGHTS_FILENAME = 'fitted_weights.csv'
 
 
 class Controller:
@@ -150,6 +156,26 @@ def draw_figure(canvas, figure):
     return figure_canvas_agg
 
 
+def convertObjectToJSON(obj):
+    return json.dumps(obj, indent=2)
+
+
+def convertNdarrayToCSV(ndarray):
+    s = io.StringIO()
+    np.savetxt(s, ndarray, fmt="%.5f", newline="\n", delimiter=",")
+    return s.getvalue()
+
+
+def getDirOfFilePath(filePath):
+    return os.path.dirname(filePath)
+
+
+def saveAs(dir, fileName, str):
+    filePath = os.path.join(dir, fileName)
+    with open(filePath, 'w') as f:
+        f.write(str)
+
+
 def delete_figure_agg(figure_agg):
     figure_agg.get_tk_widget().forget()
     try:
@@ -162,7 +188,14 @@ def delete_figure_agg(figure_agg):
 def main():
     def filePathLayout(text, key):
         return [sg.Text(text), sg.Push(), sg.Input(visible=True, enable_events=True, size=(FILE_PATH_INPUT_WIDTH, 1), key=key), sg.FileBrowse()]
-    layout = [
+    listBoxContent = ["----Logistic Regression----"]
+
+    def listBoxPrint(str):
+        nonlocal listBoxContent
+        listBoxContent.append(str)
+        window[EVENT_LISTBOX].update(listBoxContent)
+
+    left_layout = [
         filePathLayout("Data Points CSV: ", EVENT_DATA_POINT_FILE_PATH),
         filePathLayout("Label CSV: ", EVENT_LABEL_FILE_PATH),
         [sg.HSep()],
@@ -178,15 +211,29 @@ def main():
         [sg.HSep()],
         [sg.Button('Plot Data Points', enable_events=True, k=EVENT_PLOT_DATA_POINT),
             sg.VSep(),
-            sg.Button('Run', enable_events=True, k=EVENT_RUN)],
+            sg.Button('Run', enable_events=True, k=EVENT_RUN),
+            sg.VSep(),
+            sg.Text('Cost'), sg.Input(size=(5, 1), readonly=True, default_text="0.0", key=EVENT_COST)],
         [sg.HSep()],
         [sg.Canvas(key=EVENT_CANVAS, size=(CANVAS_WIDTH, CANVAS_HEIGHT),
-                   background_color=sg.theme_button_color()[1])]
+                   background_color=sg.theme_button_color()[1])],
     ]
+    right_layout = [
+        [sg.Listbox(values=listBoxContent, size=(50, 50), key=EVENT_LISTBOX)]]
+    layout = [[sg.Column(left_layout), sg.VSeperator(),
+               sg.Column(right_layout)]]
     window = sg.Window('Logistic Regression', layout,
                        grab_anywhere=False, finalize=True)
     controller = Controller()
     figure_agg = None
+    envDir = os.getcwd()
+
+    def canvasDrawFigure(fig):
+        nonlocal figure_agg
+        if figure_agg:
+            delete_figure_agg(figure_agg)
+        figure_agg = draw_figure(window[EVENT_CANVAS].TKCanvas, fig)
+
     while True:
         event, values = window.read()
         if event == sg.WIN_CLOSED or event == "Exit":
@@ -194,6 +241,7 @@ def main():
         try:
             if event == EVENT_DATA_POINT_FILE_PATH:
                 controller.dataPointFilePath = values[EVENT_DATA_POINT_FILE_PATH]
+                envDir = os.path.dirname(controller.dataPointFilePath)
             elif event == EVENT_LABEL_FILE_PATH:
                 controller.labelFilePath = values[EVENT_LABEL_FILE_PATH]
             elif event == EVENT_CUSTOMIZED_WEIGHT_FILE_PATH:
@@ -201,10 +249,8 @@ def main():
             elif event == EVENT_USE_CUSTOMIZED_WEIGHT:
                 controller.useCustomizedWeight = values[EVENT_USE_CUSTOMIZED_WEIGHT]
             elif event == EVENT_PLOT_DATA_POINT:
-                if figure_agg:
-                    delete_figure_agg(figure_agg)
                 fig = controller.plotDataPoint()
-                figure_agg = draw_figure(window[EVENT_CANVAS].TKCanvas, fig)
+                canvasDrawFigure(fig)
             elif event == EVENT_REG_STRENGTH:
                 controller.setRegularizationStrength(
                     values[EVENT_REG_STRENGTH])
@@ -212,8 +258,34 @@ def main():
                 controller.setTestSize(values[EVENT_TEST_SIZE_SLIDER])
             elif event == EVENT_RUN:
                 regInput = controller.generateRegressionInput()
-                output = REG_FUNC(regInput)
-                result = output[MODEL_OUTPUT_DICT_RESULTS_KEY]
+                listBoxPrint("Running Logistic Regression")
+                output = None
+                if controller.useCustomizedWeight:
+                    output = CUSTOMIZED_WEIGHT_REG_FUNC
+                else:
+                    output = REG_FUNC(regInput)
+
+                cost = output[MODEL_OUTPUT_DICT_COST_KEY]
+                window[EVENT_COST].update(str(round(cost, 2)))
+
+                if MODEL_OUTPUT_DICT_FIGURE in output:
+                    fig = output[MODEL_OUTPUT_DICT_FIGURE]
+                    canvasDrawFigure(fig)
+
+                if MODEL_OUTPUT_DICT_METRICS_KEY in output:
+                    metrics = output[MODEL_OUTPUT_DICT_METRICS_KEY]
+                    metricsJSONStr = convertObjectToJSON(metrics)
+                    saveAs(envDir, METRIC_FILENAME, metricsJSONStr)
+                    listBoxPrint("Metrics JSON saved: " +
+                                 os.path.join(envDir, METRIC_FILENAME))
+
+                if MODEL_OUTPUT_DICT_FITTED_WEIGHT_KEY in output:
+                    fittedWeights = output[MODEL_OUTPUT_DICT_FITTED_WEIGHT_KEY]
+                    fittedWeightsCSVStr = convertNdarrayToCSV(fittedWeights)
+                    saveAs(envDir, FITTED_WEIGHTS_FILENAME, fittedWeightsCSVStr)
+                    listBoxPrint("Fitted Weights CSV saved: " +
+                                 os.path.join(envDir, FITTED_WEIGHTS_FILENAME))
+
         except Exception as e:
             sg.Popup(str(e), keep_on_top=True)
     window.close()
