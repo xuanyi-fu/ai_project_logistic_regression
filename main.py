@@ -1,5 +1,6 @@
 from auto_model import auto_logistic_regression
 from utils import *
+from manual_model import manual_logistic_regression
 from matplotlib.figure import Figure
 from sklearn.decomposition import PCA
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -12,12 +13,13 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 
-CUSTOMIZED_WEIGHT_REG_FUNC = None
+CUSTOMIZED_WEIGHT_REG_FUNC = manual_logistic_regression
 REG_FUNC = auto_logistic_regression
 
 EVENT_DATA_POINT_FILE_PATH = '-DataPointCSVFilePath-'
 EVENT_LABEL_FILE_PATH = '-LabelCSVFilePath-'
 EVENT_CUSTOMIZED_WEIGHT_FILE_PATH = '-CustomizedWeightFilePath-'
+EVENT_CUSTOMIZED_BIAS_FILE_PATH = '-CustomizedBiasFilePath-'
 EVENT_USE_CUSTOMIZED_WEIGHT = '-UseCustomizedWeight-'
 EVENT_PLOT_DATA_POINT = '-PlotDataPoint-'
 EVENT_CANVAS = '-Canvas-'
@@ -44,6 +46,7 @@ class Controller:
     labelFilePath = ''
     useCustomizedWeight = False
     weightFilePath = ''
+    biasFilePath = ''
     regularizationStrength = DEFAULT_REG_STRENGTH
     figure = None
     testSize = DEFAULT_TEST_SIZE
@@ -125,7 +128,7 @@ class Controller:
 
     def checkReady(self):
         self.checkPlotReady()
-        if self.useCustomizedWeight and self.weightFilePath == '':
+        if self.useCustomizedWeight and self.weightFilePath == '' and self.biasFilePath == '':
             raise Exception("Weight CSV file not assigned.")
 
     def generateRegressionInput(self):
@@ -134,13 +137,16 @@ class Controller:
         label_ndarray = Controller.readCSV2Ndarray(self.labelFilePath)
         label_ndarray = np.squeeze(label_ndarray)
         weight_ndarray = None
+        bias_ndarray = None
         if self.useCustomizedWeight:
             weight_ndarray = Controller.readCSV2Ndarray(self.weightFilePath)
+            bias_ndarray = Controller.readCSV2Ndarray(self.biasFilePath)
 
         return {OUTPUT_DICT_DATA_POINT_KEY: data_point_ndarray,
                 OUTPUT_DICT_LABELS_KEY: label_ndarray,
                 OUTPUT_DICT_REG_STRENGTH_KEY: self.regularizationStrength,
                 OUTOUT_DICT_WEIGHT_KEY: weight_ndarray,
+                OUTPUT_DICT_B_KEY: bias_ndarray,
                 OUTPUT_DICT_TEST_SIZE_KEY: self.testSize}
 
 
@@ -203,6 +209,8 @@ def main():
                      k=EVENT_USE_CUSTOMIZED_WEIGHT, enable_events=True)],
         filePathLayout("Customized Weight CSV: ",
                        EVENT_CUSTOMIZED_WEIGHT_FILE_PATH),
+        filePathLayout("Customized Bias CSV: ",
+                       EVENT_CUSTOMIZED_BIAS_FILE_PATH),
         [sg.HSep()],
         [sg.Text('Regularization Strength'), sg.Input(default_text=str(DEFAULT_REG_STRENGTH), visible=True,
                                                       enable_events=True, size=(int(FILE_PATH_INPUT_WIDTH / 2), 1), key=EVENT_REG_STRENGTH)],
@@ -213,7 +221,7 @@ def main():
             sg.VSep(),
             sg.Button('Run', enable_events=True, k=EVENT_RUN),
             sg.VSep(),
-            sg.Text('Cost'), sg.Input(size=(5, 1), readonly=True, default_text="0.0", key=EVENT_COST)],
+            sg.Text('Cost'), sg.Input(size=(5, 1), readonly=True, default_text="0.0", key=EVENT_COST, text_color='red')],
         [sg.HSep()],
         [sg.Canvas(key=EVENT_CANVAS, size=(CANVAS_WIDTH, CANVAS_HEIGHT),
                    background_color=sg.theme_button_color()[1])],
@@ -246,6 +254,8 @@ def main():
                 controller.labelFilePath = values[EVENT_LABEL_FILE_PATH]
             elif event == EVENT_CUSTOMIZED_WEIGHT_FILE_PATH:
                 controller.weightFilePath = values[EVENT_CUSTOMIZED_WEIGHT_FILE_PATH]
+            elif event == EVENT_CUSTOMIZED_BIAS_FILE_PATH:
+                controller.biasFilePath = values[EVENT_CUSTOMIZED_BIAS_FILE_PATH]
             elif event == EVENT_USE_CUSTOMIZED_WEIGHT:
                 controller.useCustomizedWeight = values[EVENT_USE_CUSTOMIZED_WEIGHT]
             elif event == EVENT_PLOT_DATA_POINT:
@@ -261,7 +271,7 @@ def main():
                 listBoxPrint("Running Logistic Regression")
                 output = None
                 if controller.useCustomizedWeight:
-                    output = CUSTOMIZED_WEIGHT_REG_FUNC
+                    output = CUSTOMIZED_WEIGHT_REG_FUNC(regInput)
                 else:
                     output = REG_FUNC(regInput)
 
