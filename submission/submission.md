@@ -8,4 +8,4 @@ The logistic regression tool offers a number of useful features, such as the abi
 
 # Demo
 
-The project includes a demonstration of the model in action, which can be found in the `./demo/demo.pdf` file.
+The project includes a demonstration of the model in action, which can be found in the `./demo/demo.pdf` file, or the link [https://github.com/xuanyi-fu/ai_project_logistic_regression/blob/main/demo/demo.pdf](https://github.com/xuanyi-fu/ai_project_logistic_regression/blob/main/demo/demo.pdf)
